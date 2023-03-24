@@ -1,0 +1,7 @@
+- hosts: backup_server
+  remote_user: "{{ admin.user }}"
+  gather_facts: no
+  become: yes
+
+  roles:
+    - backup_server_install

@@ -1,0 +1,36 @@
+
+- name: Get infos on container
+  docker_container_info:
+    name: "{{ internal_kibana_server_docker_name }}"
+  register: kibana_container_result
+
+- name: Create kibana home directory
+  file:
+    path: "{{ internal_kibana_server_home_dir }}"
+    state: directory
+    mode: '0755'
+    owner: mgms-admin
+    group: mgms-admin
+  when: not kibana_container_result.exists
+
+- name: "Copy server kibana file"
+  template:
+    src: kibana.yml.j2
+    dest: "{{ internal_kibana_server_home_dir }}/kibana.yml"
+  when: not kibana_container_result.exists
+
+- name: Install and start kibana as Docker container
+  docker_container:
+    name: "{{ internal_kibana_server_docker_name }}"
+    image: "{{ internal_kibana_server_image }}:{{ internal_kibana_server_tag }}"
+    hostname: "{{ internal_kibana_server_docker_name }}"
+    restart_policy: always
+    recreate: yes
+    state: started
+    pull: yes
+    network_mode: "{{ internal_elasticsearch_server_docker_network }}"
+    ports:
+     - "{{ internal_kibana_server_port1 }}:{{ internal_kibana_server_port1 }}"
+    volumes:
+      - "{{ internal_kibana_server_home_dir }}/kibana.yml:/usr/share/kibana/config/kibana.yml"
+  when: not kibana_container_result.exists

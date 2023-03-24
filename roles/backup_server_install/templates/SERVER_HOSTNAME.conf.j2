@@ -1,0 +1,61 @@
+Client {
+  Name = {{ internal_bacula_backup_host_name }}-fd
+  Address = {{ internal_bacula_backup_host_ip }}
+  FDPort = 9102
+  Catalog = MyCatalog
+  Password = "{{ internal_bacula_backup_pass }}"
+  File Retention = 30 days
+  Job Retention = 6 months
+  AutoPrune = yes
+}
+
+JobDefs {
+  Name = {{ internal_bacula_backup_host_name }}-job
+  Type = Backup
+  Level = Differential
+  Client = {{ internal_bacula_backup_host_name }}-fd
+  FileSet = "backup-server"
+  Schedule = "ServerSchedule"
+  Storage = File0
+  Messages = Standard
+  Pool = {{ internal_bacula_backup_host_name }}-pool
+  Priority = 10
+  Write Bootstrap = "/etc/bacula/bootstrap/{{ internal_bacula_backup_host_name }}.bsr"
+}
+
+Job {
+  Name = {{ internal_bacula_backup_host_name }}-Backup
+  Client = {{ internal_bacula_backup_host_name }}-fd
+  JobDefs = {{ internal_bacula_backup_host_name }}-job
+}
+
+Job {
+  Name = {{ internal_bacula_backup_host_name }}-Restore
+  Type = Restore
+  Client= {{ internal_bacula_backup_host_name }}-fd
+  FileSet= "backup-server"
+  Storage = File0
+  Pool = {{ internal_bacula_backup_host_name }}-pool
+  Messages = Standard
+  Where = "/mnt/data/restore/{{ internal_bacula_backup_host_name }}"
+  Write Bootstrap = "/etc/bacula/bootstrap/{{ internal_bacula_backup_host_name }}.bsr"
+}
+
+Schedule {
+  Name = "ServerSchedule"
+  Run = Full sun at 07:35
+  Run = Incremental mon-sat at 01:30
+}
+
+Pool {
+  Name = {{ internal_bacula_backup_host_name }}-pool
+  Pool Type = Backup
+  Recycle = yes
+  Label Format = Vol-{{ internal_bacula_backup_host_name }}-
+  AutoPrune = yes
+  Volume Retention = 99 days
+  Maximum Volume Bytes = 50G
+  Maximum Volume Jobs = 100
+  Maximum Volumes = 100
+  Volume Use Duration = 23h
+}

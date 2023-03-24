@@ -1,0 +1,21 @@
+- name: Set fact for Bacula Server
+  set_fact:
+    internal_bacula_backup_server_host_name: "{{ hostvars[groups.backup_server[0]].host_name }}"
+    internal_bacula_backup_server_host_ip: "{{ hostvars[groups.backup_server[0]].host_ip }}"
+
+- name: Set fact for Bacula pass
+  set_fact:
+    internal_bacula_backup_pass: "{{ base.backup.bacula.backup_pass }}"
+
+- name: Set fact for Bacula permissions
+  set_fact:
+    internal_bacula_backup_dir: "{{ base.backup.bacula.home_dir }}"
+    internal_bacula_backup_restore_dir: "{{ base.backup.bacula.restore_dir }}"
+    internal_bacula_backup_email_notification_01: "{{ base.backup.bacula.notification.email01 }}"
+    internal_bacula_backup_client_host_name: "{{ backup_client_name }}"
+
+- name: Set fact for Bacula Client
+  set_fact:
+    internal_bacula_backup_client_host_ip: "{{ backup_client_ip }}"
+    internal_bacula_client_backup_dir: "{{ internal_bacula_backup_dir }}/{{ internal_bacula_backup_client_host_name }}"
+    internal_bacula_client_restore_dir: "{{ internal_bacula_backup_restore_dir }}/{{ internal_bacula_backup_client_host_name }}"

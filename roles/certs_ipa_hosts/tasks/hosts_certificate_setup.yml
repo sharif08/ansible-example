@@ -1,0 +1,87 @@
+
+- name: Prepare LDAP Server login
+  command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c 'echo "{{ internal_ldap_server_admin_pass }}" | kinit admin'
+  changed_when: false
+
+- name: ADD Alias
+  command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c "{{ ipa_command_default_01 }}"
+  when: alias_host_service_fqdn is defined
+  changed_when: false
+  ignore_errors: True
+
+- name: Create Certicated for Alias
+  command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c "{{ ipa_command_default_02 }}"
+  when: alias_host_service_fqdn is defined
+  changed_when: false
+  ignore_errors: True
+
+- name: Create a remote directory if it does not exist
+  file:
+    path: "{{ ipa_command_default_05 }}"
+    state: directory
+    owner: "{{ internal_host_user }}"
+    group: "{{ internal_host_user }}"
+  when: alias_host_service_fqdn is defined
+  tags:
+  - skip_ansible_lint
+
+- name: Copy Certificate key to localhost
+  command: "docker cp {{ internal_ldap_server_docker_name }}-master1:{{ ipa_command_default_04 }}"
+  when: alias_host_service_fqdn is defined
+  changed_when: false
+
+
+- name: Copy Certificate crt to localhost
+  command: "docker cp {{ internal_ldap_server_docker_name }}-master1:{{ ipa_command_default_03 }}"
+  when: alias_host_service_fqdn is defined
+  changed_when: false
+
+
+- name: Change file permission  if it does not exist
+  file:
+    path: "{{ item }}"
+    owner: "{{ internal_host_user }}"
+    group: "{{ internal_host_user }}"
+  with_items:
+   - "{{ ipa_command_default_05 }}/{{ internal_alias_host_service_fqdn }}.key"
+   - "{{ ipa_command_default_05 }}/{{ internal_alias_host_service_fqdn }}.crt"
+  when: alias_host_service_fqdn is defined
+  tags:
+  - skip_ansible_lint
+
+- name: Ensure {{ internal_alias_host_service_fqdn }} crts  exists
+  stat:
+    path: "{{ ipa_command_default_05 }}/{{ internal_alias_host_service_fqdn }}.crt"
+  register: host_alias_crts_result
+  when: alias_host_service_fqdn is defined
+
+- name: Ensure {{ internal_alias_host_service_fqdn }} key  exists
+  stat:
+    path: "{{ ipa_command_default_05 }}/{{ internal_alias_host_service_fqdn }}.key"
+  register: host_alias_key_result
+  when: alias_host_service_fqdn is defined
+
+- name: Create a remote directory if it does not exist
+  file:
+    path: "{{ base.ipa_client.crts_dir }}"
+    state: directory
+    owner: "{{ internal_host_user }}"
+    group: "{{ internal_host_user }}"
+  register: ipa_client_dir_result
+  delegate_to: "{{ internal_ldap_client_ip }}"
+  when: alias_host_service_fqdn is defined
+  tags:
+  - skip_ansible_lint
+
+- name: Set the Variable client host
+  shell: >
+    echo {{ internal_alias_host_service_fqdn }} | awk 'BEGIN{FS="."}{print $1}'
+  register: internal_ldap_clien_fqdn_result
+  changed_when: false
+  tags:
+  - skip_ansible_lint
+
+- name: LDAP Server Entry dry run
+  command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c "{{ ipa_default_command_06 }}"
+  register: test_entery
+  changed_when: false

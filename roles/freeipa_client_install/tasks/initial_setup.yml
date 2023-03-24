@@ -1,0 +1,17 @@
+
+- name: Set fact for Client
+  set_fact:
+    internal_freeipa_client_fqdn: "{{ host_fqdn }}"
+    internal_clinet_host_name:  "{{ host_name }}"
+    internal_ipa_client_ip: "{{ ipa_client_ip }}"
+
+- name: Set fact for ldap server
+  set_fact:
+    internal_freeipa_ldap_server_hostname: "{{ hostvars[groups.ldapserver[0]].host_fqdn }}"
+    internal_freeipa_ldap_server_ip: "{{ hostvars[groups.ldapserver[0]].host_ip }}"
+    internal_freeipa_ldap_server_replica_ip: "{{ hostvars[groups.ldapserver[1]].host_ip }}"
+    internal_freeipa_server_realm: "{{ hostvars[groups.ldapserver[0]].host_domain }}"
+    internal_freeipa_server_password: "{{ ldap_server.password }}"
+
+- debug:
+    msg : "{{ internal_ipa_client_ip }}"

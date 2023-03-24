@@ -1,0 +1,14 @@
+---
+# handlers file for roles/docker_install
+
+- name: stop docker
+  systemd:
+    name: docker
+    state: stopped
+
+- name: start docker
+  systemd:
+    name: docker
+    state: started
+    daemon_reload: yes
+    enabled: yes

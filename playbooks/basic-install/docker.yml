@@ -1,0 +1,9 @@
+
+- hosts: "{{ ipa_client_fqdn }}"
+  remote_user: "{{ admin.user }}"
+  gather_facts: no
+  become: yes
+
+
+  roles:
+    - docker_install

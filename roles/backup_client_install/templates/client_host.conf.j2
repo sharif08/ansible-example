@@ -1,0 +1,70 @@
+Client {
+  Name = {{ internal_bacula_backup_client_host_name }}-fd
+  Address = {{ internal_bacula_backup_client_host_ip }}
+  FDPort = 9102
+  Catalog = MyCatalog
+  Password = "{{ internal_bacula_backup_pass }}"
+  File Retention = 30 days
+  Job Retention = 6 months
+  AutoPrune = yes
+}
+
+JobDefs {
+  Name = "{{ internal_bacula_backup_client_host_name }}-job"
+  Type = Backup
+  Level = Differential
+  Client = {{ internal_bacula_backup_client_host_name }}-fd
+  FileSet = "{{ internal_bacula_backup_client_host_name }}-fileset"
+  Schedule = "WeeklyCycle"
+  Storage = File1
+  Messages = Standard
+  Pool = {{ internal_bacula_backup_client_host_name }}-pool
+  Priority = 10
+  Write Bootstrap = "/etc/bacula/bootstrap/{{ internal_bacula_backup_client_host_name }}.bsr"
+}
+
+Job {
+  Name = "{{ internal_bacula_backup_client_host_name }}-Backup"
+  Client = {{ internal_bacula_backup_client_host_name }}-fd
+  JobDefs = "{{ internal_bacula_backup_client_host_name }}-job"
+}
+
+Job {
+  Name = "{{ internal_bacula_backup_client_host_name }}-Restore"
+  Type = Restore
+  Client= {{ internal_bacula_backup_client_host_name }}-fd
+  FileSet= "{{ internal_bacula_backup_client_host_name }}-fileset"
+  Storage = File1
+  Pool = {{ internal_bacula_backup_client_host_name }}-pool
+  Messages = Standard
+  Where = {{ internal_bacula_backup_restore_dir }}/{{ internal_bacula_backup_client_host_name }}
+  Write Bootstrap = "/etc/bacula/bootstrap/{{ internal_bacula_backup_client_host_name }}.bsr"
+}
+
+Pool {
+  Name = {{ internal_bacula_backup_client_host_name }}-pool
+  Pool Type = Backup
+  Recycle = yes
+  Label Format = Vol-{{ internal_bacula_backup_client_host_name }}-
+  AutoPrune = yes
+  Volume Retention = 99 days
+  Maximum Volume Bytes = 50G
+  Maximum Volume Jobs = 100
+  Maximum Volumes = 100
+  Volume Use Duration = 23h
+}
+
+FileSet {
+  Name = "{{ internal_bacula_backup_client_host_name }}-fileset"
+  Include {
+    File = /etc
+    File = /home
+    Options {
+      signature = MD5
+      compression=gzip
+    }
+  }
+  Exclude {
+  }
+}
+

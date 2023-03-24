@@ -1,0 +1,25 @@
+- name: Set fact for DNS and Domain Entry's
+  set_fact:
+    internal_ldap_server_master02_domain: "{{ hostvars[groups.ldapserver[1]].host_domain }}"
+    internal_ldap_server_master02_dns: "{{ hostvars[groups.ldapserver[1]].ldap_server_dns }}"
+    #internal_host_user: "{{ hostvars[groups.ldapserver[1]].admin.user }}"
+    internal_ldap_server_master01_hostname: "{{ hostvars[groups.ldapserver[0]].host_name }}"
+
+- name: Set fact for ldap IP's
+  set_fact:
+    internal_ldap_server_master01_ip: "{{ hostvars[groups.ldapserver[0]].host_ip }}"
+    internal_ldap_server_master02_ip: "{{ hostvars[groups.ldapserver[1]].host_ip }}"
+
+
+- name: Set fact for docker from the host group 'ldapserver'
+  set_fact:
+    internal_ldap_server_docker_name: "{{ base.docker.ldap_server.container_name }}"
+    internal_ldap_server_docker_image: "{{ base.docker.ldap_server.image }}"
+    internal_ldap_server_docker_tag: "{{ base.docker.ldap_server.tag }}"
+    internal_docker_restart_policy: "{{ base.docker.restart_policy }}"
+
+
+- name: Set fact for docker from the host group 'ldapserver'
+  set_fact:
+    internal_ldap_server_admin_pass: "{{ ldap_server.password }}"
+    internal_host_user: "{{ system.admin_user }}"

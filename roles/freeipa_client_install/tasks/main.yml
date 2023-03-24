@@ -1,0 +1,13 @@
+---
+# tasks file for freeipa_clinet_install
+
+- name: Collectiong set facts
+  include: initial_setup.yml
+
+- name: LDAP Prepare FreeIPA Client
+  include: freeipa-client-prepare.yml
+  #when: "inventory_hostname == {{ ipa_client_ip }}"
+
+- name: LDAP Installtion FreeIPA Client
+  include: freeipa-client-install.yml
+  #when: inventory_hostname == "{{ ipa_client_ip }}"

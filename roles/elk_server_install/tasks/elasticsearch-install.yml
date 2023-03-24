@@ -1,0 +1,55 @@
+
+- name: Get infos on container
+  docker_container_info:
+    name: "{{ internal_elasticsearch_server_docker_name }}"
+  register: elasticsearch_container_result
+
+- name: Set the time zone
+  timezone:
+    name: Europe/Vienna
+  when: not elasticsearch_container_result.exists
+
+- name: Create elasticsearch home directory
+  file:
+    path: "{{ internal_elasticsearch_server_home_dir }}"
+    state: directory
+    mode: '0755'
+    owner: mgms-admin
+    group: mgms-admin
+  when: not elasticsearch_container_result.exists
+
+- name: "Copy server elasticsearch file"
+  template:
+    src: elasticsearch.yml.j2
+    dest: "{{ internal_elasticsearch_server_home_dir }}/elasticsearch.yml"
+  when: not elasticsearch_container_result.exists
+
+- name: "Create a Volume"
+  docker_volume:
+    name: "{{ internal_elasticsearch_server_docker_volume }}"
+  when: not elasticsearch_container_result.exists
+
+- name: "Create a network"
+  docker_network:
+    name: "{{ internal_elasticsearch_server_docker_network }}"
+  when: not elasticsearch_container_result.exists
+
+- name: Install and start elasticsearch as Docker container
+  docker_container:
+    name: "{{ internal_elasticsearch_server_docker_name }}"
+    image: "{{ internal_elasticsearch_server_image }}:{{ internal_elasticsearch_server_tag }}"
+    hostname: "{{ internal_elasticsearch_server_docker_name }}"
+    restart_policy: always
+    recreate: yes
+    state: started
+    pull: yes
+    network_mode: "{{ internal_elasticsearch_server_docker_network }}"
+    env:
+      ES_JAVA_OPTS: "-Xmx59392m -Xms59392m"
+    ports:
+     - "{{ internal_elasticsearch_server_port1 }}:{{ internal_elasticsearch_server_port1 }}"
+     - "{{ internal_elasticsearch_server_port2 }}:{{ internal_elasticsearch_server_port2 }}"
+    volumes:
+      - "{{ internal_elasticsearch_server_home_dir }}/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml"
+      - "{{ internal_elasticsearch_server_docker_volume }}:/usr/share/elasticsearch/data"
+        #  when: not elasticsearch_container_result.exists

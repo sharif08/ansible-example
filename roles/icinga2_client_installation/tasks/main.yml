@@ -1,0 +1,14 @@
+---
+
+- name: "Set facts for required variables for the role"
+  include: initial-setup.yml
+
+- name: "Ubuntu client installation"
+  include: install-icinga2-client.yml
+  when: os_name == "ubuntu" or os_name == "debian"
+
+- name: "Icinga2 certificate handling"
+  include: certificate-handling.yml
+
+- name: "Add {{ inventory_hostname }} to icinga2 master"
+  include: icinga2-server-config.yml

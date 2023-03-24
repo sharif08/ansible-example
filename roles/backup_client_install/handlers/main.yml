@@ -1,0 +1,12 @@
+---
+# handlers file for roles/backup_client_install
+
+- name: stop bacula-fd
+  systemd:
+    name: bacula-fd
+    state: stopped
+
+- name: start bacula-fd
+  systemd:
+    name: bacula-fd
+    state: started

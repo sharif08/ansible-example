@@ -1,0 +1,12 @@
+
+- hosts: "{{ elk_client_name }}"
+  remote_user: ansible
+  gather_facts: no
+  become: yes
+
+  vars:
+    elk_client_name:   
+    elk_client_ip:     
+
+  roles:
+    - elk_client_install

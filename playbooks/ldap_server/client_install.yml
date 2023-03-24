@@ -1,0 +1,34 @@
+
+
+- hosts: ldapserver
+  remote_user: "{{ admin.user }}"
+  gather_facts: no
+  become: yes
+
+  roles:
+    - freeipa_prepare_client
+
+  vars:
+    ipa_client_fqdn:                 
+    ipa_client_ip:                   
+- hosts: "{{ ipa_client_fqdn }}"
+  remote_user: "{{ admin.user }}"
+  gather_facts: no
+  become: yes
+
+  roles:
+    - freeipa_client_install
+
+
+- hosts: vie01-freeipa01.r3c.mgms
+  remote_user: "{{ admin.user }}"
+  gather_facts: no
+  become: yes
+  tasks:
+    - command: docker exec -it "{{ base.docker.ldap_server.container_name }}-master1" bash -c "ipa service-add HTTP/{{ ipa_client_fqdn }}"
+      ignore_errors: yes
+
+  vars:
+    ipa_client_fqdn:                 
+    
+- import_playbook: ../basic-install/docker.yml

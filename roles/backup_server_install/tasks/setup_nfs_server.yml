@@ -1,0 +1,10 @@
+- name: Upgrade all apt packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+    force_apt_get: yes
+
+- name: Install NFS server packages
+  apt:
+    name: [nfs-common,nfs-kernel-server]
+    state: present

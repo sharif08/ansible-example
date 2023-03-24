@@ -1,0 +1,24 @@
+
+- name: Collecting set facts
+  include: initial-setup.yml
+
+- name: Installation Rsyslog
+  include: rsyslog-install.yml
+  when: inventory_hostname in groups['elk_rsyslog_server'][0]
+
+- name: Installation ElasticSearch
+  include: elasticsearch-install.yml
+  when: inventory_hostname in groups['elk_rsyslog_server'][0]
+
+- name: Installation kibana
+  include: kibana-install.yml
+  when: inventory_hostname in groups['elk_rsyslog_server'][0]
+
+- name: Installation logstashg
+  include: logstash-install.yml
+  when: inventory_hostname in groups['elk_rsyslog_server'][0]
+
+- name: Installation nginx
+  include: elk-nginx-install.yml
+  when: inventory_hostname in groups['elk_rsyslog_server'][0]
+

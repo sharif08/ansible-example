@@ -1,0 +1,20 @@
+server {
+    listen       80;
+    server_name  vie01-syslog.r3c.mgms;
+
+    location / {
+        auth_ldap "Closed content";
+        auth_ldap_servers ldap1;
+        proxy_pass http://kibana:5601;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;  
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

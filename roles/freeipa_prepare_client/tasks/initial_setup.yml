@@ -1,0 +1,38 @@
+- name: Set fact for ldap_server from the host group 'ldapserver'
+  set_fact:
+    #internal_ldap_server_master01_ip: "{{ hostvars[groups.ldapserver[0]].host_ip }}"
+    #internal_ldap_domain: "{{ host_domain }}"
+    #internal_ldap_server_admin_pass: "{{ ldap_server.password }}"
+#    inventory_ldap_client_host_ip: "{{ ipa_client_ip }}"
+
+
+- name: Set fact for Client
+  set_fact:
+#    internal_freeipa_client_server: "{{ hostvars[groups.ldapserver[0]].host_fqdn }}"
+#    internal_freeipa_client_realm: "{{ host_domain }}"
+#    internal_freeipa_client_password: "{{ ldap_server.password }}"
+#    internal_freeipa_client_fqdn: "{{ ipa_client_fqdn }}"
+
+
+#- name: create short name
+#  set_fact:
+#    inventory_hostname_short: '{{ inventory_hostname.split(".")[0] }}'
+
+- name: Set fact for ldap_server from the host group 'ldapserver'
+  set_fact:
+    internal_ldap_server_master01_ip: "{{ hostvars[groups.ldapserver[0]].host_ip }}"
+
+- name: Set fact for client domain
+  set_fact:
+    internal_ldap_domain: "{{ hostvars[ipa_client_fqdn].host_domain }}"
+    internal_freeipa_client_fqdn: "{{ ipa_client_fqdn }}"
+    inventory_ldap_client_host_ip: "{{ ipa_client_ip }}"
+
+- name: Set fact for ldap server password
+  set_fact:
+    internal_ldap_server_admin_pass: "{{ ldap_server.password }}"
+
+
+- name: Set fact for docker from the host group 'ldapserver'
+  set_fact:
+    internal_ldap_server_docker_name: "{{ hostvars[groups.ldapserver[0]].base.docker.ldap_server.container_name }}"

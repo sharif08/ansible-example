@@ -1,0 +1,3 @@
+
+
+command1: "http://{{ internal_hostname_fqdn }}:{{ internal_chart_musem_port1 }} --username {{ internal_host_user }} --password {{ internal_chart_museum_admin_pass }}"

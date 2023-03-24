@@ -1,0 +1,119 @@
+
+- block:
+
+  - name: Create required directories for bacula client if it does not exist
+    file:
+      path: "{{ item }}"
+      state: directory
+      recurse: yes
+      owner: bacula
+      group: bacula
+      mode: '0775'
+    with_items:
+      - "{{ internal_bacula_client_backup_dir }}"
+      - "{{ internal_bacula_client_restore_dir }}"
+    tags:
+    - skip_ansible_lint
+
+  - name: Create Bacula client configuration file
+    template:
+      src: client_host.conf.j2
+      dest: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      backup: yes
+      owner: root
+      group: bacula
+      mode: '0666'
+
+
+
+  # Create entry below for all servers with additional directories which needs to be backuped
+
+  - name: "Add additional directories for backup - for k8s-etcd cluster"
+    lineinfile:
+      path: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      insertafter: '  Include.*'
+      line: '    File = /var/lib/kubelet'
+    when: "internal_bacula_backup_client_host_name == 'vie01-k8s-m01-prod.r3c.prod' or internal_bacula_backup_client_host_name == 'vie01-k8s-m02-prod.r3c.prod' or internal_bacula_backup_client_host_name == 'vie01-k8s-m03-prod.r3c.prod' or internal_bacula_backup_client_host_name == 'vie01-k8s-m01-dev.r3c.dev' or internal_bacula_backup_client_host_name == 'vie01-k8s-m02-dev.r3c.dev' or internal_bacula_backup_client_host_name == 'vie01-k8s-m03-dev.r3c.dev' or internal_bacula_backup_client_host_name == 'vie02-k8s-w01-prod.r3c.prod.conf' or internal_bacula_backup_client_host_name == 'klu01-k8s-w02-prod.r3c.prod.conf' or internal_bacula_backup_client_host_name == 'vie01-sgx01.r3c.dev.conf' or internal_bacula_backup_client_host_name == 'vie01-sgx02.r3c.dev.conf' or internal_bacula_backup_client_host_name == 'vie01-k8s-dev-w03.r3c.dev.conf'"
+
+  - name: "Add additional directories for backup - for k8s-etcd cluster"
+    lineinfile:
+      path: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      insertafter: '  Include.*'
+      line: '    File = /var/lib/etcd'
+    when: "internal_bacula_backup_client_host_name == 'vie01-k8s-proxy-etcd01.r3c.prod' or internal_bacula_backup_client_host_name == 'vie01-k8s-proxy-etcd02.r3c.prod' or internal_bacula_backup_client_host_name == 'vie01-k8s-proxy-etcd03.r3c.prod' or internal_bacula_backup_client_host_name == 'vie01-k8s-dev-etcd01.r3c.dev' or internal_bacula_backup_client_host_name == 'vie01-k8s-dev-etcd02.r3c.dev' or internal_bacula_backup_client_host_name == 'vie01-k8s-dev-etcd03.r3c.dev'"
+
+  - name: "Add additional directories for backup - for server jenkins"
+    lineinfile:
+      path: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      insertafter: '  Include.*'
+      line: '    File = /var/lib/jenkins'
+    when: "internal_bacula_backup_client_host_name == 'vie01-jenkins.r3c.mgms' or internal_bacula_backup_client_host_name == 'vie01-jenkins-android-builder.r3c.mgms'"
+
+  - name: "Add additional directories for backup, if server is in group proxmox"
+    lineinfile:
+      path: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      insertafter: '  Include.*'
+      line: '{{ item }}'
+    with_items:
+      - '    File = /var/lib/pve'
+      - '    File = /var/lib/pve-cluster'
+      - '    File = /var/lib/pve-firewall'
+      - '    File = /var/lib/pve-manager'
+    when: "internal_bacula_backup_client_host_name in groups['proxmox']"
+
+  - name: "Add additional directories for backup - for server cicd"
+    lineinfile:
+      path: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      insertafter: '  Include.*'
+      line: '{{ item }}'
+    with_items:
+      - '    File = /opt'
+      - '    File = /var/lib/xcp'
+      - '    File = /var/lib/xen'
+      - '    File = /var/lib/xenstored'
+    when: "internal_bacula_backup_client_host_name == 'vie01-cicd.r3c.mgms'"
+
+  - name: "Add additional directories for backup - for server artifactory"
+    lineinfile:
+      path: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      insertafter: '  Include.*'
+      line: '{{ item }}'
+    with_items:
+      - '    File = /opt/jfrog'
+      - '    File = /var/opt/jfrog'
+    when: "internal_bacula_backup_client_host_name == 'vie01-artifactory.r3c.mgms' or internal_bacula_backup_client_host_name == 'vie01-artifactory-oss.r3c.mgms'"
+
+  - name: "Add additional directories for backup - for server sonarqube"
+    lineinfile:
+      path: "/etc/bacula/conf.d/{{ internal_bacula_backup_client_host_name }}.conf"
+      insertafter: '  Include.*'
+      line: '{{ item }}'
+    with_items:
+      - '    File = /opt'
+    when: "internal_bacula_backup_client_host_name == 'vie01-sonarqube.r3c.mgms'"
+
+
+
+  - name: "Add Bacula Client Host Entry to /etc/hosts"
+    lineinfile:
+      dest: /etc/hosts
+      regexp: "^{{ item['ip'] }}.*$"
+      line: "{{ item['ip'] }}\t{{ item['names'] | join(' ') }}"
+      state: present
+    with_items:
+    - ip: "{{ internal_bacula_backup_client_host_ip }}"
+      names:
+      - "{{ internal_bacula_backup_client_host_name }}"
+
+  - name: "restart service on the server --> delegate_to doesn't work for handler"
+    systemd:
+      name: bacula-director
+      state: stopped
+
+  - name: start bacula-director
+    systemd:
+      name: bacula-director
+      state: started
+
+  delegate_to: "{{ internal_bacula_backup_server_host_ip }}"
+

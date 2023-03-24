@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  role_name: rancher_install
+  author: Sharif
+  description: Role install the rancher k8s
+  company: riddleandcode
+
+  license: BSD
+
+  min_ansible_version: 1.2
+
+  platforms:
+  - name: Ubuntu-20.0.1
+    versions:
+      - all
+
+  galaxy_tags: []
+
+dependencies:
+  - docker_install

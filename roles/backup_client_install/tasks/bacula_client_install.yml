@@ -1,0 +1,82 @@
+
+- name: Upgrade bacula Client all apt packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+    force_apt_get: yes
+  when: os_version == "20.04"
+
+- name: Install Bacula Client packages for ubuntu servers
+  apt:
+    name: [bacula-fd]
+    state: present
+  when: os_name == "ubuntu"
+
+- name: Install Bacula Client packages for xen servers
+  yum:
+    name:
+    - https://bacula.org/packages/5e622a18b8227/rpms/9.0.6/el7/x86_64/bacula-libs-9.0.6-1.el7.x86_64.rpm
+    - https://bacula.org/packages/5e622a18b8227/rpms/9.0.6/el7/x86_64/bacula-client-9.0.6-1.el7.x86_64.rpm
+  when: os_name == "xenserver"
+
+- name: Install NFS client package
+  apt:
+    name: [nfs-common]
+    state: present
+  when: os_name == "ubuntu"
+
+- name: Create a symbolic link for bacula configuration directory
+  file:
+    src: /opt/bacula/etc
+    dest: /etc/bacula
+    owner: root
+    group: bacula
+    state: link
+  when: os_name == "xenserver"
+
+- name: Add the user  with a specific uid and a primary group of 'bacula'
+  user:
+    name: "{{ item }}"
+    group: bacula
+    state: present
+  with_items:
+    - "{{ admin.user }}"
+
+- name: "Change internal_bacula_backup_server_host_ip if client ip is inside vlan 20"
+  set_fact:
+    internal_bacula_backup_server_host_ip: "{{ hostvars[groups.backup_server[0]].host_ip_vlan_20 }}"
+  when: host_vlan == "20"
+
+- name: "Change internal_bacula_backup_server_host_ip if client ip is inside vlan 40"
+  set_fact:
+    internal_bacula_backup_server_host_ip: "{{ hostvars[groups.backup_server[0]].host_ip_vlan_40 }}"
+  when: host_vlan == "40"
+
+- name: "Change internal_bacula_backup_server_host_ip if client ip is inside vlan 60"
+  set_fact:
+    internal_bacula_backup_server_host_ip: "{{ hostvars[groups.backup_server[0]].host_ip_vlan_60 }}"
+  when: host_vlan == "60"
+
+- name: "Change internal_bacula_backup_server_host_ip if client ip is inside vlan 70"
+  set_fact:
+    internal_bacula_backup_server_host_ip: "{{ hostvars[groups.backup_server[0]].host_ip_vlan_70 }}"
+  when: host_vlan == "70"
+
+- name: "Add bacula Server Host Entry to /etc/hosts"
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "^{{ item['ip'] }}.*$"
+    line: "{{ item['ip'] }}\t{{ item['names'] | join(' ') }}"
+    state: present
+  with_items:
+  - ip: "{{ internal_bacula_backup_server_host_ip }}"
+    names:
+    - "{{ internal_bacula_backup_server_host_name }}"
+
+- name: Configure Bacula client fd conf
+  template:
+    src: bacula-fd.conf.j2
+    dest: /etc/bacula/bacula-fd.conf
+  notify:
+    - stop bacula-fd
+    - start bacula-fd

@@ -1,0 +1,21 @@
+
+# Install Cockpit Client
+#- import_playbook: ../basic-install/all-host.yml
+
+- import_playbook: ../basic-install/docker.yml
+
+# Install Ldap Client to New VM
+# Required Variables : ipa_client_fqdn=   ipa_client_ip=
+- import_playbook: ../ldap_server/client_install.yml
+
+# Install Monitoring Server
+# Required Variables : icinga_client_name=   icinga_client_ip=
+- import_playbook: ../monitoring/icinga2_client_installation.yml
+
+# Install BackUp server
+# Required Variables : backup_client_name=   backup_client_ip=
+- import_playbook: ../backup_bacula/bacula_client_install.yml
+
+# Install elk host client logging 
+# Required Variables : elk_client_name=   elk_client_ip=
+- import_playbook: ../elk/elk_client.yml

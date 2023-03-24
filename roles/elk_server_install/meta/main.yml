@@ -1,0 +1,20 @@
+---
+galaxy_info:
+  role_name: elk_server_install
+  author: Sharif
+  description: Role install the elk server
+  company: riddleandcode
+
+  license: BSD
+
+  min_ansible_version: 1.2
+
+  platforms:
+  - name: Ubuntu-20.0.1
+    versions:
+      - all
+
+  galaxy_tags: []
+
+dependencies:
+  - docker_install

@@ -1,0 +1,48 @@
+
+- name: Get infos on container
+  docker_container_info:
+    name: "{{ internal_elk_nginx_server_docker_name }}"
+  register: elk_nginx_container_result
+
+- name: Create elk-nginx home directory
+  file:
+    path: "{{ internal_elk_nginx_server_home_dir }}"
+    state: directory
+    mode: '0755'
+    owner: mgms-admin
+    group: mgms-admin
+  when: not elk_nginx_container_result.exists
+
+- name: "Copy elk-nginx default config file"
+  template:
+    src: elk-nginx-default.conf.j2
+    dest: "{{ internal_elk_nginx_server_home_dir }}/default.conf"
+  when: not elk_nginx_container_result.exists
+
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: index.docker.io/v1/
+    username: sharif08
+    password: e9128162-f82b-462d-8362-286a1c10b607
+    reauthorize: yes
+
+- name: Install and start elk-nginx as Docker container
+  docker_container:
+    name: "{{ internal_elk_nginx_server_docker_name }}"
+    image: "{{ internal_elk_nginx_server_image }}"
+    hostname: "{{ internal_elk_nginx_server_docker_name }}"
+    restart_policy: always
+    recreate: yes
+    state: started
+    pull: yes
+    network_mode: "{{ internal_elasticsearch_server_docker_network }}"
+    ports:
+     - "{{ internal_elk_nginx_server_port1 }}:{{ internal_elk_nginx_server_port1 }}/tcp"
+     - "{{ internal_elk_nginx_server_port2 }}:{{ internal_elk_nginx_server_port2 }}/tcp"
+    volumes:
+      - "{{ internal_elk_nginx_server_home_dir }}:/etc/nginx/conf.d"
+  when: not elk_nginx_container_result.exists
+
+- name: Log out of DockerHub
+  docker_login:
+    state: absent

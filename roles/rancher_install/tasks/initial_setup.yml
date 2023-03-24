@@ -1,0 +1,16 @@
+
+- name: Set fact for Crts dir
+  set_fact:
+    internal_client_crts_dir: "{{ base.ipa_client.crts_dir }}"
+
+- name: Set fact for docker
+  set_fact:
+    internal_rancher_server_docker_name: "{{ base.docker.rancher.container.name }}"
+    internal_rancher_server_image: "{{ base.docker.rancher.container.image }}"
+    internal_rancher_server_tag: "{{ base.docker.rancher.container.tag }}"
+    internal_rancher_server_port1: "{{ base.docker.rancher.container.port1 }}"
+    internal_rancher_server_port2: "{{ base.docker.rancher.container.port2 }}"
+    internal_rancher_server_port3: "{{ base.docker.rancher.container.port3 }}"
+    internal_rancher_server_port4: "{{ base.docker.rancher.container.port4 }}"
+    internal_rancher_server_port5: "{{ base.docker.rancher.container.port5 }}"
+    internal_rancher_server_home_dir: "{{ base.docker.rancher.home_dir }}"

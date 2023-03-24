@@ -1,0 +1,15 @@
+
+
+
+ipa_command_default_01: "ipa service-add-principal  HTTP/{{ insternal_host_service_fqdn }}  HTTP/{{ internal_alias_host_service_fqdn }}"
+
+ipa_command_default_02: "ipa-getcert request -r -f /etc/pki/tls/certs/{{ internal_alias_host_service_fqdn }}.crt -k /etc/pki/tls/private/{{ internal_alias_host_service_fqdn }}.key -N CN={{ internal_alias_host_service_fqdn }} -D {{ insternal_host_service_fqdn }} -K HTTP/{{ insternal_host_service_fqdn }}"
+
+ipa_command_default_03: "/etc/pki/tls/certs/{{ internal_alias_host_service_fqdn }}.crt  {{ ipa_command_default_05 }}"
+
+
+ipa_command_default_04:  "/etc/pki/tls/private/{{ internal_alias_host_service_fqdn }}.key  {{ ipa_command_default_05 }}"
+
+ipa_command_default_05: "{{ internal_client_crts_dir }}"
+
+ipa_default_command_06: "ipa  dnsrecord-add {{ internal_ldap_domain }} {{ internal_ldap_clien_fqdn_result.stdout }} --a-rec {{ internal_ldap_client_ip }}"

@@ -1,0 +1,19 @@
+object Endpoint "{{ internal_icinga2_server_container_name }}" {
+}
+
+object Zone "master" {
+	endpoints = [ "{{ internal_icinga2_server_container_name }}" ]
+}
+
+// Endpoints & Zones
+object Endpoint "{{ inventory_hostname }}" {
+     host="{{ internal_icinga2_client_ip }}"
+     {% if "{{ inventory_hostname }}" == "{{ internal_icinga2_server_host_name }}" %} port="5765" {% else %} port="5665" {% endif %}
+
+}
+
+
+object Zone "{{ inventory_hostname }}" {
+     endpoints = [ "{{ inventory_hostname }}" ]
+     parent = "master"
+}

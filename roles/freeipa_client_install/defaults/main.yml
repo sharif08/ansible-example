@@ -1,0 +1,21 @@
+---
+# defaults file for freeipa_clinet_install
+
+# Install FreeIPA packages (set to false if you're using `timorunge.freeipa`)
+# Type: Bool
+freeipa_client_install_pkgs: true
+
+# The base command for the FreeIPA client installation
+# Type: Str
+freeipa_client_install_base_command: ipa-client-install --unattended
+
+# The default FreeIPA client installation options
+# Type: List
+freeipa_client_install_options:
+  - "--domain={{ internal_freeipa_server_realm }}"
+  - "--server={{ internal_freeipa_ldap_server_hostname }}"
+  - "--realm={{ internal_ldap_server_realm_result.stdout }}"
+  - "--principal=admin"
+  - "--password={{ internal_freeipa_server_password }}"
+  - "--mkhomedir"
+  - "--hostname={{ internal_freeipa_client_fqdn | default(ansible_fqdn) }}"

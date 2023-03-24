@@ -1,0 +1,52 @@
+---
+- block:
+
+  - name: Install FreeIPA client packages
+    package:
+      name: [freeipa-client,realmd,oddjob-mkhomedir]
+      state: present
+
+  - name: Enable mkhomedir for user login
+    lineinfile:
+      dest: /etc/pam.d/common-session
+      line: 'session     required      pam_mkhomedir.so skel=/etc/skel umask=0022'
+
+  - name: Set the Variable to get the host domain in Upper case
+    shell: >
+      echo {{ internal_freeipa_server_realm }} | rev|cut -d. -f2,1|rev | tr '[:lower:]' '[:upper:]'
+    register: internal_ldap_server_realm_result
+    changed_when: false
+    tags:
+    - skip_ansible_lint
+
+  - name: Register maven installation status
+    command: which ipa-client-install
+    changed_when: false
+    register: mvn_installed
+
+  - debug:
+      var: mvn_installed
+
+
+  - name: Run the FreeIPA client installer
+    args:
+      creates: /etc/ipa/default.conf
+    command: "{{ freeipa_client_install_base_command }} {{ freeipa_client_install_options | join(' ') }}"
+    when: mvn_installed
+
+  - name: Add DNS Enter to Resolve.conf
+    command: >
+      echo "nameserver {{ internal_freeipa_ldap_server_ip }}" | sudo tee -a /etc/resolvconf/resolv.conf.d/head
+      echo "nameserver {{ internal_freeipa_ldap_server_replica_ip }}" | sudo tee -a /etc/resolvconf/resolv.conf.d/head
+    notify:
+      - start resolvconf
+    tags:
+    - skip_ansible_lint
+
+
+  - name: Add DNS Enter to Resolve.conf
+    command: "hostnamectl set-hostname {{ internal_clinet_host_name }}"
+    tags:
+    - skip_ansible_lint
+
+  delegate_to: "{{ internal_ipa_client_ip }}"

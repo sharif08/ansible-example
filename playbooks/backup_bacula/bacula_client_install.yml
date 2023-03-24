@@ -1,0 +1,11 @@
+- hosts: "{{ backup_client_name }}"
+  remote_user: "{{ admin.user }}"
+  gather_facts: no
+  become: yes
+
+  vars:
+    backup_client_name:    
+    backup_client_ip:      
+
+  roles:
+    - backup_client_install

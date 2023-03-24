@@ -1,0 +1,41 @@
+---
+
+- block:
+
+  - name: Set the variable for client
+    shell: >
+      echo {{ inventory_ldap_client_host_ip }} | awk -F. -v OFS=. '{print $4 }'
+    register: internal_ldap_client
+
+  - name: Set the Variable for reverse zone
+    shell: >
+      echo {{ internal_ldap_server_master01_ip }} | awk 'BEGIN{FS="."}{print $3"."$2"."$1".in-addr.arpa"}'
+    register: internal_ldap_client_revers_ip
+
+  - name: Set the Variable for fqdn split
+    shell: >
+      echo {{ internal_freeipa_client_fqdn }} | sed 's/\..*//'
+    register: internal_ldap_client_fqdn_split
+
+  - name: Set the Variable client host
+    shell: >
+      echo {{ internal_freeipa_client_fqdn }} | awk 'BEGIN{FS="."}{print $1}'
+    register: internal_ldap_clien_fqdn_result
+
+  - name: Prepare LDAP Server login
+    command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c 'echo "{{ internal_ldap_server_admin_pass }}"| kinit admin'
+
+  - name: LDAP Server Entry dry run
+    command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c "{{ ipa_default_command_01 }}"
+    register: test_entery
+
+  - name: Prepare LDAP client new entery
+    command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c "{{ ipa_default_command_02 }}"
+    when:  test_entery.stdout == '0'
+
+  - name: Prepare LDAP Server for Revers entery
+    command: docker exec -it "{{ internal_ldap_server_docker_name }}-master1" bash -c "{{ ipa_default_command_03 }}"
+    when:  test_entery.stdout == '0'
+
+
+  delegate_to: "{{ internal_ldap_server_master01_ip }}"

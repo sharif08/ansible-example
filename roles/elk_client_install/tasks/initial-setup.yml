@@ -1,0 +1,31 @@
+
+- name: "Set server ip address for clients without vlans"
+  set_fact:
+    internal_rsyslog_server_ip: "{{ hostvars[groups.elk_rsyslog_server[0]].host_ip }}"
+  when: host_vlan == "dhcp" or host_vlan == "43"
+
+- name: "Set server ip address for clients in vlan 20"
+  set_fact:
+    internal_rsyslog_server_ip: "{{ hostvars[groups.elk_rsyslog_server[0]].host_ip_vlan_20 }}"
+  when: host_vlan == "20"
+
+- name: "Set server ip address for clients in vlan 40"
+  set_fact:
+    internal_rsyslog_server_ip: "{{ hostvars[groups.elk_rsyslog_server[0]].host_ip_vlan_40 }}"
+  when: host_vlan == "40"
+
+- name: "Set server ip address for clients in vlan 50"
+  set_fact:
+    internal_rsyslog_server_ip: "{{ hostvars[groups.elk_rsyslog_server[0]].host_ip }}"
+  when: host_vlan == "50"
+
+- name: "Set server ip address for clients in vlan 60"
+  set_fact:
+    internal_rsyslog_server_ip: "{{ hostvars[groups.elk_rsyslog_server[0]].host_ip_vlan_60 }}"
+  when: host_vlan == "60"
+
+- name: "Set server ip address for clients in vlan 70"
+  set_fact:
+    internal_rsyslog_server_ip: "{{ hostvars[groups.elk_rsyslog_server[0]].host_ip_vlan_70 }}"
+  when: host_vlan == "70"
+

@@ -1,0 +1,19 @@
+# vars file for icinga2.client.installation
+
+icinga_pki_new_cert_command: "icinga2 pki new-cert --cn {{ inventory_hostname }} --key /etc/icinga2/pki/{{ inventory_hostname }}.key \
+                                    --cert /etc/icinga2/pki/{{ inventory_hostname }}.crt"
+
+icinga_pki_request_command: "icinga2 pki request --host {{ internal_icinga2_server_host_ip }} --port {{ internal_icinga2_server_container_port }} \
+                                 --ticket {{ ticket.stdout }} --key /etc/icinga2/pki/{{ inventory_hostname }}.key --cert /etc/icinga2/pki/{{ inventory_hostname }}.crt \
+                                       --trustedcert /etc/icinga2/pki/trusted-master.crt --ca /etc/icinga2/pki/ca.key"
+
+icinga_node_setup_18_command: "icinga2 node setup --ticket {{ ticket.stdout }} --endpoint {{ internal_icinga2_server_container_name }} \
+                                 --zone {{ inventory_hostname }} --master_host {{ internal_icinga2_server_container_name }} --trustedcert /etc/icinga2/pki/trusted-master.crt \
+                                      --accept-config --accept-commands --cn {{ inventory_hostname }}"
+
+icinga_get_master_cert_command: "icinga2 pki save-cert --key /etc/icinga2/pki/{{ inventory_hostname }}.key --cert /etc/icinga2/pki/{{ inventory_hostname }}.crt --trustedcert /etc/icinga2/pki/trusted-master.crt --host {{ internal_icinga2_server_host_ip }}"
+
+
+icinga_node_setup_20_command:  "icinga2 node setup --ticket {{ ticket.stdout }} --endpoint {{ internal_icinga2_server_container_name }} \
+                                  --zone {{ inventory_hostname }} --parent_host {{ internal_icinga2_server_container_name }} --trustedcert /etc/icinga2/pki/trusted-master.crt \ 
+                                      --parent_zone {{ internal_icinga2_server_zone }} --accept-config --accept-commands --disable-confd --cn {{ inventory_hostname }}"

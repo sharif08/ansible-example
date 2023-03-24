@@ -1,0 +1,72 @@
+---
+
+- name: "generate ticket on the icinga2 master and save it as a variable"
+  command: "docker exec -it {{ internal_icinga2_server_container_name }} /usr/sbin/icinga2 pki ticket --cn {{ inventory_hostname }}"
+  delegate_to: "{{ internal_icinga2_server_host_ip_main }}"
+  remote_user: "{{ admin.user }}"
+  become: true
+  register: ticket
+  changed_when: false
+
+- debug:
+    msg: "Ticket for host {{ inventory_hostname }} is: {{ ticket.stdout }}"
+
+- name: "Create local pki folder on server {{ inventory_hostname }}"
+  file:
+    path: '/etc/icinga2/pki'
+    state: directory
+    mode: '0700'
+    owner: nagios
+    group: nagios
+  tags:
+  - skip_ansible_lint
+
+- name: "Create local cert on server {{ inventory_hostname }}"
+  command: "{{ icinga_pki_new_cert_command }}"
+  changed_when: false
+
+- name: Save the masters cert as trustedcert
+  command: "{{ icinga_get_master_cert_command }}"
+  changed_when: false
+
+- name: Request the certificate from the icinga2 server
+  command: "{{ icinga_pki_request_command }}"
+  changed_when: false
+
+- name: "Recursively change ownership of /etc/icinga2 - the first time"
+  file:
+    path: '/etc/icinga2'
+    state: directory
+    recurse: yes
+    owner: nagios
+    group: nagios
+  tags:
+  - skip_ansible_lint
+
+- name: "{{ inventory_hostname }} - icinga2 node setup ubuntu 20.04"
+  command: "{{ icinga_node_setup_20_command }}"
+  when: os_version == "20.04"
+
+- name: "{{ inventory_hostname }} - icinga2 node setup ubuntu 18.04"
+  command: "{{ icinga_node_setup_18_command }}"
+  when: os_version == "18.04" or os_name == "debian"
+
+- name: "Override zones configuration file"
+  template:
+    src: dlt_zones.j2
+    dest: /etc/icinga2/zones.conf
+    owner: nagios
+    group: nagios
+    mode: 0644
+
+- name: "Recursively change ownership of /etc/icinga2 - the second time"
+  file:
+    path: '/etc/icinga2'
+    state: directory
+    recurse: yes
+    owner: nagios
+    group: nagios
+  tags:
+  - skip_ansible_lint
+  notify:
+    - restart icinga2

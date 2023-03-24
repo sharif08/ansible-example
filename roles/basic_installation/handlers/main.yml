@@ -1,0 +1,15 @@
+---
+# handlers file for roles/basic_installtion
+
+
+- name: stop cockpit
+  systemd:
+    name: cockpit
+    state: stopped
+
+- name: start cockpit
+  systemd:
+    name: cockpit
+    state: started
+    daemon_reload: yes
+    enabled: yes

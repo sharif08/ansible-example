@@ -1,0 +1,125 @@
+---
+# tasks file for roles/helm_chart_museum_install
+
+- name: Set fact fqdn
+  set_fact:
+    internal_hostname_fqdn: "{{ host_fqdn }}"
+    internal_chart_museum_admin_pass: "{{ ldap_server.password }}"
+    internal_host_user: "{{ admin.user }}"
+
+- name: Set fact for docker chart musume
+  set_fact:
+    internal_rancher_server_docker_name: "{{ base.docker.chart_musem.container.name }}"
+    internal_chart_museum_image: "{{ base.docker.chart_musem.container.image }}"
+    internal_chart_musem_tag: "{{ base.docker.chart_musem.container.tag }}"
+    internal_chart_musem_port1: "{{ base.docker.chart_musem.container.port1 }}"
+    internal_helm_home_dir: "{{ base.docker.chart_musem.home_dir }}"
+
+- name: Get infos on container
+  docker_container_info:
+    name: "{{ internal_rancher_server_docker_name }}"
+  register: helm_chart_container_result
+
+- name: Ensure "{{ internal_helm_home_dir }}" dir exists
+  file:
+    path: "{{ internal_helm_home_dir }}/chartmuseum-dev"
+    state: directory
+    owner: "{{ admin.user }}"
+    group: "{{ admin.user }}"
+  register: helm_home_dir_result
+  tags:
+  - skip_ansible_lint
+
+- name: Ensure CA Certificate Exists exists
+  stat:
+    path: "{{ internal_helm_home_dir }}/chartmuseum-dev-ssl/ca.crt"
+  register: helm_ssl_ca_result
+
+- name: Ensure Host Crts Certificate Exists exists
+  stat:
+    path: "{{ internal_helm_home_dir }}/chartmuseum-dev-ssl/vie01-helm-chartmuseum.r3c.mgms.crt"
+  register: helm_ssl_host_crt_result
+
+- name: Ensure Host Crts Key Certificate Exists exists
+  stat:
+    path: "{{ internal_helm_home_dir }}/chartmuseum-dev-ssl/vie01-helm-chartmuseum.r3c.mgms.key"
+  register: helm_ssl_host_key_result
+
+- name: Install and start ldap-server  as Docker container
+  docker_container:
+    name: "{{ internal_rancher_server_docker_name }}-dev"
+    image: "{{ internal_chart_museum_image }}:{{ internal_chart_musem_tag }}"
+    restart_policy: unless-stopped
+    recreate: yes
+    state: started
+    pull: yes
+    ports:
+      - "{{ internal_chart_musem_port1 }}:8080"
+    volumes:
+      - "{{ helm_home_dir_result.path }}:/charts"
+      - "{{ helm_ssl_ca_result.stat.path }}:/etc/chartmuseum/ca.crt"
+      - "{{ helm_ssl_host_crt_result.stat.path }}:/etc/chartmuseum/vie01-helm-chartmuseum.r3c.mgms.crt"
+      - "{{ helm_ssl_host_key_result.stat.path }}:/etc/chartmuseum/vie01-helm-chartmuseum.r3c.mgms.key"
+    log_driver: syslog
+    log_options:
+      syslog-address: tcp://0.0.0.0
+      tag: chartmuseum
+    env:
+      #BASIC_AUTH_USER: "{{ internal_host_user }}"
+      #BASIC_AUTH_PASS: "{{ internal_chart_museum_admin_pass }}"
+      STORAGE: local
+      STORAGE_LOCAL_ROOTDIR: /charts
+      #CHART_URL: "https://vie01-helm-chartmuseum.r3c.mgms"
+      CHART_URL: "http://{{ internal_hostname_fqdn }}:{{ internal_chart_musem_port1 }}"
+      #TLS_KEY: "--tls-key=/etc/chartmuseum/vie01-helm-chartmuseum.r3c.mgms.key"
+      #TLS_CA: "--tls-ca-cert=/etc/chartmuseum/ca.crt"
+      #TLS_CERT: "--tls-cert=/etc/chartmuseum/vie01-helm-chartmuseum.r3c.mgms.crt"
+  when: not helm_chart_container_result.exists
+
+- name: Allow all access to tcp ports
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - 8081
+  when: not helm_chart_container_result.exists
+
+- name: Unarchive a helm and add binary
+  unarchive:
+    src: https://get.helm.sh/helm-v3.0.2-linux-amd64.tar.gz
+    dest: "/home/{{ admin.user }}/"
+    remote_src: yes
+  when: not helm_chart_container_result.exists
+  tags:
+  - skip_ansible_lint
+
+- name: Copy file to bin
+  copy:
+    src: "/home/{{ admin.user }}/linux-amd64/helm"
+    dest: /usr/bin/helm
+    mode: '+x'
+  when: not helm_chart_container_result.exists
+  tags:
+  - skip_ansible_lint
+
+- name: remove collected files and directories
+  file:
+    path: "/home/{{ admin.user }}/linux-amd64"
+    state: absent
+  when: not helm_chart_container_result.exists
+  tags:
+  - skip_ansible_lint
+
+- name: Add default helm repository
+  shell: "helm repo add r3c-k8s-helm-dev"
+  #shell: "helm repo add r3c-k8s-helm-dev {{ command1 }}"
+  when: not helm_chart_container_result.exists
+  tags:
+  - skip_ansible_lint
+
+- name: Add helm repository plugin
+  command: helm plugin install https://github.com/chartmuseum/helm-push
+  when: not helm_chart_container_result.exists
+  tags:
+  - skip_ansible_lint

@@ -1,0 +1,12 @@
+
+
+
+# this are the Commands for ipa docker container 
+ipa_default_command_01: "ipa dnsrecord-find {{ internal_ldap_domain }} --name={{ internal_ldap_client_fqdn_split.stdout }} | awk '{print $5 }' | tr -d '\n'"
+
+ipa_default_command_02: "ipa  dnsrecord-add {{ internal_ldap_domain }} {{ internal_ldap_clien_fqdn_result.stdout }} --a-rec {{ inventory_ldap_client_host_ip }}"
+
+ipa_default_command_03: "ipa dnsrecord-add  {{ internal_ldap_client_revers_ip.stdout }} {{ internal_ldap_client.stdout }} --ptr-rec {{ internal_freeipa_client_fqdn }}."
+
+ipa_default_command_04:  "ipa service-add-host --hosts={{ internal_freeipa_client_fqdn }}  HTTP/{{ internal_freeipa_client_fqdn }}"
+

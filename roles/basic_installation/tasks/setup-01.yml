@@ -1,0 +1,59 @@
+
+- name: Install cockpit
+  apt:
+    name: cockpit
+    state: present
+  notify:
+    - start cockpit
+
+- name: Install Container Package
+  apt:
+    deb: " https://launchpad.net/ubuntu/+source/cockpit/215-1~ubuntu19.10.1/+build/18889196/+files/cockpit-docker_215-1~ubuntu19.10.1_all.deb"
+  notify:
+    - stop cockpit
+    - start cockpit
+  run_once: true
+
+- name: Disable Network-manager
+  systemd:
+    state: stopped
+    enabled: no
+    name: network-manager.service
+
+- name: Delete Dashboard
+  apt:
+    name: cockpit-dashboard
+    state: absent
+  notify:
+    - stop cockpit
+    - start cockpit
+
+- name: Create a directory if it does not exist Change the cockpit default port
+  file:
+    path: /etc/systemd/system/cockpit.socket.d/
+    state: directory
+  tags:
+  - skip_ansible_lint
+
+- name: Create a file if it does not exist Change the cockpit default port
+  file:
+    path: /etc/systemd/system/cockpit.socket.d/listen.conf
+    state: touch
+  tags:
+  - skip_ansible_lint
+
+- name: Ensure listen.conf file  exists
+  stat:
+    path: /etc/systemd/system/cockpit.socket.d/listen.conf
+  register: cockpit_file_result
+
+- name: Change the cockpit default port
+  lineinfile:
+    path: /etc/systemd/system/cockpit.socket.d/listen.conf
+    state: present
+    line: '{{ item }}'
+  with_items:
+    - '[Socket]'
+    - ListenStream=
+    - ListenStream=9091
+  when: cockpit_file_result.stat.exists

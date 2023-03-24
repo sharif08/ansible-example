@@ -1,0 +1,15 @@
+
+- name: Set fact for ldap_server from the host group 'ldapserver'
+  set_fact:
+    internal_ldap_server_master01_ip: "{{ hostvars[groups.ldapserver[0]].host_ip }}"
+    internal_ldap_server_admin_pass: "{{ ldap_server.password }}"
+    insternal_host_service_fqdn: "{{ host_service_fqdn }}"
+    internal_alias_host_service_fqdn: "{{ alias_host_service_fqdn }}"
+    internal_host_user: "{{ admin.user }}"
+    internal_ldap_client_ip: "{{ hostvars[host_service_fqdn].host_ip }}"
+    internal_client_crts_dir: "{{ base.ipa_client.crts_dir }}"
+    internal_ldap_domain: "{{ hostvars[host_service_fqdn].host_domain }}"
+
+- name: Set fact for docker from the host group 'ldapserver'
+  set_fact:
+    internal_ldap_server_docker_name: "{{ hostvars[groups.ldapserver[0]].base.docker.ldap_server.container_name }}"

@@ -1,0 +1,10 @@
+---
+# tasks file for roles/certs_ipa_hosts
+
+- name: Collectiong set facts
+  include: initial_setup.yml
+
+- name: Create Certificates
+  include: hosts_certificate_setup.yml
+  when: inventory_hostname in groups['ldapserver'][0]
+

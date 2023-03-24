@@ -1,0 +1,77 @@
+---
+# tasks file for roles/rancher_install
+
+- name: Ensure "{{ internal_client_crts_dir }}" dir exists
+  file:
+    path: "{{ internal_client_crts_dir }}"
+    state: directory
+  register: ipa_crts_dir_result
+  tags:
+  - skip_ansible_lint
+
+- name: Ensure Root ipa server ca.crt crts  exists
+  stat:
+    path: "{{ ipa_crts_dir_result.path }}/ca.crt"
+  register: root_crts_result
+
+- name: Ensure vie01-k8s-cluster-rancher.r3c.mgms.crt crts  exists
+  stat:
+    path: "{{ ipa_crts_dir_result.path }}/vie01-k8s-cluster-rancher.r3c.mgms.crt"
+  register: rancher_host_crts_result
+
+- name: Ensure vie01-k8s-cluster-rancher.r3c.mgms.key key  exists
+  stat:
+    path: "{{ ipa_crts_dir_result.path }}/vie01-k8s-cluster-rancher.r3c.mgms.key"
+  register: rancher_key_result
+
+- name: Create Full Chain crts
+  shell: "cat  {{ rancher_host_crts_result.stat.path }} {{ root_crts_result.stat.path }} >> {{ ipa_crts_dir_result.path }}/fullchain.crt"
+  register: rancher_full_chain_result
+  changed_when: false
+
+- name: Ensure root fullchain  exists
+  stat:
+    path: "{{ ipa_crts_dir_result.path }}/fullchain.crt"
+  register: rancher_fullchain_result
+
+################# Example Coaniner for Docker #######################
+#docker run -d --restart=unless-stopped \
+#-p 80:80 -p 443:443 \
+#-v /<CERT_DIRECTORY>/<FULL_CHAIN.pem>:/etc/rancher/ssl/cert.pem \
+#-v /<CERT_DIRECTORY>/<PRIVATE_KEY.pem>:/etc/rancher/ssl/key.pem \
+#-v /<CERT_DIRECTORY>/<CA_CERTS.pem>:/etc/rancher/ssl/cacerts.pem \
+#rancher/rancher:latest
+####################################################################
+####################################################################
+
+- name: Log into private registry and force re-authorization
+  docker_login:
+    registry: index.docker.io/v1/
+    username: sharif08
+    password: e9128162-f82b-462d-8362-286a1c10b607
+    reauthorize: yes
+
+- name: Install and start RANCHER  as Docker container
+  docker_container:
+    name: "{{ internal_rancher_server_docker_name }}"
+    image: "{{ internal_rancher_server_image }}:{{ internal_rancher_server_tag }}"
+    restart_policy: unless-stopped
+    recreate: yes
+    state: started
+    pull: no
+    privileged: true
+    ports:
+     - "{{ internal_rancher_server_port1 }}:{{ internal_rancher_server_port1 }}"
+     - "{{ internal_rancher_server_port2 }}:{{ internal_rancher_server_port2 }}"
+     - "{{ internal_rancher_server_port3 }}:{{ internal_rancher_server_port3 }}"
+     - "{{ internal_rancher_server_port4 }}:{{ internal_rancher_server_port4 }}"
+     - "{{ internal_rancher_server_port5 }}:{{ internal_rancher_server_port5 }}"
+    volumes:
+      - "{{ rancher_fullchain_result.stat.path }}:/etc/rancher/ssl/cert.pem"
+      - "{{ rancher_key_result.stat.path }}:/etc/rancher/ssl/key.pem"
+      - "{{ rancher_host_crts_result.stat.path }}:/etc/rancher/ssl/cacerts.pem"
+      - "{{ internal_rancher_server_home_dir }}:/var/lib/rancher/"
+
+- name: Log out of DockerHub
+  docker_login:
+    state: absent

@@ -1,0 +1,47 @@
+
+- name: Get infos on container
+  docker_container_info:
+    name: "{{ internal_logstash_server_docker_name }}"
+  register: logstash_container_result
+
+- name: Create logstash home directory
+  file:
+    path: "{{ internal_logstash_server_home_dir }}/pipeline"
+    state: directory
+    mode: '0755'
+    owner: mgms-admin
+    group: mgms-admin
+  when: not logstash_container_result.exists
+
+- name: "Copy server logstash file"
+  template:
+    src: logstash.yml.j2
+    dest: "{{ internal_logstash_server_home_dir }}/logstash.yml"
+  when: not logstash_container_result.exists
+
+- name: "Copy server logstash pipeline file"
+  template:
+    src: logstash.conf.j2
+    dest: "{{ internal_logstash_server_home_dir }}/pipeline/logstash.conf"
+  when: not logstash_container_result.exists
+
+- name: Install and start logstash as Docker container
+  docker_container:
+    name: "{{ internal_logstash_server_docker_name }}"
+    image: "{{ internal_logstash_server_image }}:{{ internal_logstash_server_tag }}"
+    hostname: "{{ internal_logstash_server_docker_name }}"
+    restart_policy: always
+    recreate: yes
+    state: started
+    pull: yes
+    network_mode: "{{ internal_elasticsearch_server_docker_network }}"
+    env:
+      LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+    ports:
+     - "{{ internal_logstash_server_port1 }}:{{ internal_logstash_server_port1 }}/tcp"
+     - "{{ internal_logstash_server_port2 }}:{{ internal_logstash_server_port2 }}/udp"
+     - "{{ internal_logstash_server_port3 }}:{{ internal_logstash_server_port3 }}"
+    volumes:
+      - "{{ internal_logstash_server_home_dir }}/logstash.yml:/usr/share/logstash/config/logstash.yml"
+      - "{{ internal_logstash_server_home_dir }}/pipeline:/usr/share/logstash/pipeline"
+  when: not logstash_container_result.exists

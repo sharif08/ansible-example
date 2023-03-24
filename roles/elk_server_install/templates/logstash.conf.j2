@@ -1,0 +1,31 @@
+input {
+	tcp {
+		port => 5000
+            #   type => "syslogjson"
+                type => "syslog"
+                codec => "json"
+	}
+}
+
+filter {
+  if [type] == "syslog" {
+    # Uses built-in Grok patterns to parse this standard format
+    grok {
+      match => {
+        "message" => "%{SYSLOGBASE}%{SPACE}%{GREEDYDATA:SYSLOGMESSAGE}"
+      }
+    }
+    # Sets the timestamp of the event to the timestamp of recorded in the log-data
+    # By default, logstash sets the timestamp to the time it was ingested.
+    date {
+      match => [ "timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss" ]
+    }
+  }
+}
+
+
+output {
+	elasticsearch {
+		hosts => "elasticsearch:9200"
+	}
+}

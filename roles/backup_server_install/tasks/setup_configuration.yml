@@ -1,0 +1,95 @@
+
+
+- name: "Add Host Entry /etc/hosts"
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "^{{ item['ip'] }}.*$"
+    line: "{{ item['ip'] }}\t{{ item['names'] | join(' ') }}"
+    state: present
+  with_items:
+  - ip: "{{ internal_bacula_backup_host_ip }}"
+    names:
+    - "{{ internal_bacula_backup_host_name }}"
+
+- name: Create a required directory for bacula if it does not exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    owner: bacula
+    group: bacula
+    mode: '0775'
+  with_items:
+    - "{{ internal_bacula_backup_dir }}"
+    - "{{ internal_bacula_backup_dir_for_clients }}"
+    - "{{ internal_bacula_backup_restore_dir }}"
+    - "{{ internal_bacula_backup_nfs_dir }}"
+  tags:
+  - skip_ansible_lint
+
+- name: copy bacula configuration files
+  template:
+    src: "{{ item }}"
+    dest: /etc/bacula/
+    backup: yes
+  with_items:
+    - common_default_passwords
+    - bconsole.conf
+    - bacula-dir.conf
+    - bacula-sd.conf
+    - bacula-fd.conf
+
+- name: copy bacula server configuration file
+  template:
+    src: SERVER_HOSTNAME.conf.j2
+    dest: /etc/bacula/conf.d/{{ internal_bacula_backup_host_name }}.conf
+    backup: yes
+    owner: root
+    group: bacula
+    mode: '0666'
+
+- name: create label for file storage (important, otherwise no backup will be executed)
+  template:
+    src: bacula-create-label.j2
+    dest: /tmp/bacula-create-label.sh
+    backup: yes
+    owner: mgms-admin
+    group: mgms-admin
+    mode: '0755'
+
+- name: stop bacula-sd
+  systemd:
+    name: bacula-sd
+    state: stopped
+
+- name: start bacula-sd
+  systemd:
+    name: bacula-sd
+    state: started
+
+- name: stop bacula-fd
+  systemd:
+    name: bacula-fd
+    state: stopped
+
+- name: start bacula-fd
+  systemd:
+    name: bacula-fd
+    state: started
+
+- name: stop bacula-director
+  systemd:
+    name: bacula-director
+    state: stopped
+
+- name: start bacula-director
+  systemd:
+    name: bacula-director
+    state: started
+
+- name: run script bacula-create-label.sh
+  shell: bash -c "/tmp/bacula-create-label.sh"
+  register: shell_result
+
+- debug:
+    var: shell_result.stdout_lines

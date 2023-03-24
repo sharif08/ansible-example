@@ -1,0 +1,9 @@
+
+- hosts: ldapserver
+  remote_user: "{{ system.admin_user }}"
+  gather_facts: true
+  become: yes
+
+  roles:
+    - freeipa_server
+

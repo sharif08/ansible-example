@@ -1,0 +1,10 @@
+- hosts: "{{ icinga_client_name }}"
+  remote_user: ansible
+  gather_facts: no
+  become: yes
+
+  vars:
+    icinga_client_name:   
+    icinga_client_ip:     
+  roles:
+    - icinga2_client_installation

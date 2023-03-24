@@ -1,0 +1,103 @@
+- block:
+
+  - name: Get infos on container
+    docker_container_info:
+      name: "{{ internal_ldap_server_docker_name }}-master1"
+    register: container_result
+
+  - name: Set the time zone
+    timezone:
+      name: Europe/Vienna
+    when: not container_result.exists
+
+  - name: Set the Variable to get the host domain in Upper case
+    shell: >
+      echo {{ internal_ldap_server_master01_domain }} | rev|cut -d. -f2,1|rev | tr '[:lower:]' '[:upper:]'
+    register: internal_ldap_server_master01_realm
+    when: not container_result.exists
+
+  - name: Install and start ldap-server  as Docker container
+    docker_container:
+      name: "{{ internal_ldap_server_docker_name }}-master1"
+      image: "{{ internal_ldap_server_docker_image }}:{{ internal_ldap_server_docker_tag }}"
+      restart_policy: "{{ internal_docker_restart_policy }}"
+      recreate: yes
+      state: started
+      pull: yes
+      read_only: no
+      network_mode: "host"
+      hostname: "{{ inventory_hostname }}"
+      etc_hosts: '{{ internal_ldap_server_master01_dns | default({}) }}'
+      purge_networks: yes
+      sysctls:
+        net.ipv6.conf.lo.disable_ipv6: 0
+        net.ipv6.conf.all.disable_ipv6: 0
+      tty: true
+      command:
+        - -U
+        - --domain={{ internal_ldap_server_master01_domain }}
+        - --realm={{ internal_ldap_server_master01_realm.stdout }}
+        - --http-pin={{ internal_ldap_server_admin_pass }}
+        - --dirsrv-pin={{ internal_ldap_server_admin_pass }}
+        - --ds-password={{ internal_ldap_server_admin_pass }}
+        - --admin-password={{ internal_ldap_server_admin_pass }}
+        - --setup-dns
+        - --auto-forwarders
+        - --auto-reverse
+        - --allow-zone-overlap
+        - --no-dnssec-validation
+        - --ip-address={{ internal_ldap_server_master01_ip }}
+        - --unattended
+      ports:
+        - "80:80"
+        - "443:443"
+        - "389:389"
+        - "636:636"
+        - "88:88"
+        - "464:464"
+        - "88:88/udp"
+        - "464:464/udp"
+        - "123:123/udp"
+        - "7389:7389"
+        - "9443:9443"
+        - "9444:9444"
+        - "9445:9445"
+      volumes:
+        - /sys/fs/cgroup:/sys/fs/cgroup:ro
+        - "/home/{{ internal_host_user }}/.ldap-ipa-data:/data:Z"
+        - "/etc/timezone:/etc/timezone:ro"
+        - "/etc/localtime:/etc/localtime:ro"
+      env:
+        IPA_SERVER_IP={{ internal_ldap_server_master01_ip }}
+    when: not container_result.exists
+
+  - name: Allow all access to tcp ports
+    ufw:
+      rule: allow
+      port: "{{ item }}"
+      proto: tcp
+    loop:
+      - 80
+      - 443
+      - 389
+      - 636
+      - 88
+      - 464
+      - 7389
+      - 9443
+      - 9444
+      - 9445
+    when: not container_result.exists
+
+  - name: Allow all access to udp ports
+    ufw:
+      rule: allow
+      port: "{{ item }}"
+      proto: udp
+    loop:
+      - 88
+      - 464
+      - 123
+    when: not container_result.exists
+
+  delegate_to: "{{ internal_ldap_server_master01_ip }}"

@@ -1,0 +1,17 @@
+---
+# tasks file for roles/backup_server_install
+
+- name: Collectiong set facts
+  include: initial_setup.yml
+
+- name: Installtion of Bacula
+  include: setup_packages.yml
+  when: inventory_hostname in groups['backup_server'][0]
+
+- name: Configure of Bacula
+  include: setup_configuration.yml
+  when: inventory_hostname in groups['backup_server'][0]
+
+- name: Installtion NFS Server
+  include: setup_nfs_server.yml
+  when: inventory_hostname in groups['backup_server'][0]

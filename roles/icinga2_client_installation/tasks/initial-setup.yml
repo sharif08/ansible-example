@@ -1,0 +1,25 @@
+- name: Set fact icinga2 clients hosted VM
+  set_fact:
+    internal_icinga2_client_name: "{{ icinga_client_name }}"
+    internal_icinga2_client_ip: "{{ icinga_client_ip }}"
+    internal_icinga2_client_os: "{{ icinga2_host_vars_os }}"
+    internal_icinga2_client_os_name: "{{ os_name }}"
+    internal_icinga2_client_os_version: "{{ os_version }}"
+    internal_icinga2_client_snmp_type: "{{ snmp_type | default('none') }}"
+    internal_icinga2_client_ilom_ip: "{{ ilom_ip | default('none') }}"
+    internal_icinga2_client_ilom_username: "{{ ilom_username | default('none') }}"
+    internal_icinga2_client_ilom_password: "{{ ilom_password | default('none') }}"
+    internal_icinga2_client_service_var: "{{ icinga_service_var | default('none') }}"
+
+
+- name: Set fact for icinga2 Server
+  set_fact:
+    internal_icinga2_server_zone: "{{ hostvars[groups.icinga2_server[0]].base.docker.icinga2_server.zone }}"
+    internal_icinga2_server_host_name: "{{ hostvars[groups.icinga2_server[0]].host_name }}"
+    internal_icinga2_server_host_ip: "{{ hostvars[groups.icinga2_server[0]].host_ip }}"
+    internal_icinga2_server_host_ip_main: "{{ hostvars[groups.icinga2_server[0]].host_ip }}"
+    internal_icinga2_server_host_ip_vlan_60: "{{ hostvars[groups.icinga2_server[0]].host_ip_vlan_60 }}"
+    internal_icinga2_server_host_ip_vlan_70: "{{ hostvars[groups.icinga2_server[0]].host_ip_vlan_70 }}"
+    internal_icinga2_server_container_port: "{{ hostvars[groups.icinga2_server[0]].base.docker.icinga2_server.port }}"
+    internal_icinga2_server_home_dir_path: "{{ hostvars[groups.icinga2_server[0]].base.docker.icinga2_server.home_dir }}"
+    internal_icinga2_server_container_name: "{{ hostvars[groups.icinga2_server[0]].base.docker.icinga2_server.icinga_container_name }}"

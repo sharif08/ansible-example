@@ -1,0 +1,50 @@
+---
+
+- block:
+
+  - name: "Add client to master /etc/hosts"
+    lineinfile:
+      dest: /etc/hosts
+      regexp: "^{{ item['ip'] }}.*$"
+      line: "{{ item['ip'] }}\t{{ item['names'] | join(' ') }}"
+      state: present
+    with_items:
+    - ip: "{{ internal_icinga2_client_ip }}"
+      names:
+        - "{{ inventory_hostname_short }}"
+        - "{{ inventory_hostname }}"
+
+#  - name: "Copy /etc/hosts into container"
+#    command: "sudo docker exec -it {{ internal_icinga2_server_container_name }} scp mgms-admin@{{ hostvars[groups.icinga2_server[0]].host_ip }}:/etc/hosts /etc/hosts"
+#    changed_when: false
+
+  - name: "Copy server hosts file to a container volume"
+    copy:
+      src: /etc/hosts
+      dest: /home/mgms-admin/.icinga2/data/icinga/etc/hosts
+      owner: mgms-admin
+      group: mgms-admin
+      mode: '0644'
+
+  - name: "Copy hosts file to /etc/hosts"
+    command: "docker exec -it {{ internal_icinga2_server_container_name }} cp /etc/icinga2/hosts /etc/hosts"
+    changed_when: false
+
+  - name: "Copy client configuration file to server"
+    copy:
+      src: /tmp/{{ inventory_hostname }}.conf/{{ inventory_hostname }}/etc/icinga2/conf.d/{{ inventory_hostname }}.conf
+      dest: /{{ internal_icinga2_server_home_dir_path }}/etc/icinga2/zones.d/master/{{ inventory_hostname }}.conf
+      owner: mgms-admin
+      group: mgms-admin
+      mode: '0644'
+
+  - name: "Set permissions"
+    command: docker exec -it {{ internal_icinga2_server_container_name }} bash -c 'chown -R nagios:nagios /etc/icinga2/'
+    changed_when: false
+
+  - name: "Reload Icinga master configuration"
+    command: docker exec -it {{ internal_icinga2_server_container_name }} bash -c 'service icinga2 reload'
+    changed_when: false
+
+  delegate_to: "{{ internal_icinga2_server_host_ip_main }}"
+  remote_user: "{{ admin.user }}"

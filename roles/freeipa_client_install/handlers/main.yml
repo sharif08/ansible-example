@@ -1,0 +1,22 @@
+---
+# handlers file for freeipa_clinet_install
+- name: restart sssd
+  service:
+    name: sssd
+    state: restarted
+
+- name: restart ssh
+  service:
+    name: ssh
+    state: restarted
+
+- name: restart resolvconf
+  service:
+    name: resolvconf
+    state: restarted
+
+- name: start resolvconf
+  service:
+    name: resolvconf
+    state: started
+    enabled: yes

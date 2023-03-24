@@ -1,0 +1,38 @@
+
+- name: Collecting set facts
+  include: initial-setup.yml
+
+- name: Update apt-get repo and cache
+  apt:
+    update_cache: no
+    force_apt_get: yes
+    cache_valid_time: 3600
+  when: os_name == "ubuntu" or os_name == "debian"
+
+- name: install rsyslog server
+  apt:
+    name: rsyslog
+    state: present
+  when: os_name == "ubuntu" or os_name == "debian"
+
+- name: "Copy rsyslog config main file"
+  template:
+    src: main-rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+
+- name: "Copy rsyslog config file"
+  template:
+    src: rsyslog.conf.j2
+    dest: /etc/rsyslog.d/rsyslog.conf
+
+- name: stop rsyslog
+  systemd:
+    name: rsyslog
+    state: stopped
+
+- name: start rsyslog
+  systemd:
+    name: rsyslog
+    state: started
+    daemon_reload: yes
+    enabled: yes

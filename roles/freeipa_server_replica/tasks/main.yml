@@ -1,0 +1,10 @@
+---
+# tasks file for roles/freeipa_server_replica
+# tasks file for roles/freeipa_server
+
+- name: Collectiong set facts
+  include: initial_setup.yml
+
+- name: LDAP Installtion FreeIPA Server
+  include: freeipa_srv_install.yml
+  when: inventory_hostname in groups['ldapserver'][1]

@@ -1,0 +1,13 @@
+---
+# tasks file for roles/backup_client_install
+
+- name: Collectiong set facts
+  include: initial_setup.yml
+
+- name: Installation of Bacula client
+  include: bacula_client_install.yml
+
+- name: Change/Add server configuration
+  include: bacula_server_config.yml
+
+

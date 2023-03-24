@@ -1,0 +1,47 @@
+
+
+- name: Set fact elasticsearch
+  set_fact:
+    internal_elasticsearch_server_docker_name: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.name }}"
+    internal_elasticsearch_server_port1: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.port01 }}"
+    internal_elasticsearch_server_port2: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.port02 }}"
+    internal_elasticsearch_server_image: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.image }}"
+    internal_elasticsearch_server_tag: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.tag }}"
+    internal_elasticsearch_server_home_dir: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.home_dir }}"
+    internal_elasticsearch_server_docker_volume: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.volume_name }}"
+    internal_elasticsearch_server_docker_network: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elasticsearch.network_name }}"
+
+
+- name: Set fact logstash
+  set_fact:
+    internal_logstash_server_docker_name: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.name }}"
+    internal_logstash_server_port1: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.port01 }}"
+    internal_logstash_server_port2: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.port02 }}"
+    internal_logstash_server_port3: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.port03 }}"
+    internal_logstash_server_image: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.image }}"
+    internal_logstash_server_tag: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.tag }}"
+    internal_logstash_server_home_dir: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.home_dir }}"
+    internal_logstash_server_docker_network: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.logstash.network_name }}"
+
+
+- name: Set fact kibana
+  set_fact:
+    internal_kibana_server_docker_name: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.kibana.name }}"
+    internal_kibana_server_port1: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.kibana.port01 }}"
+    internal_kibana_server_image: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.kibana.image }}"
+    internal_kibana_server_tag: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.kibana.tag }}"
+    internal_kibana_server_home_dir: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.kibana.home_dir }}"
+    internal_kibana_server_docker_network: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.kibana.network_name }}"
+
+- name: Set fact rsyslog
+  set_fact:
+    internal_rsyslog_server_host_name: "{{ hostvars[groups.elk_rsyslog_server[0]].host_ip }}"
+
+- name: Set fact elk-nginx
+  set_fact:
+    internal_elk_nginx_server_docker_name: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elk_nginx.name }}"
+    internal_elk_nginx_server_port1: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elk_nginx.port01 }}"
+    internal_elk_nginx_server_port2: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elk_nginx.port02 }}"
+    internal_elk_nginx_server_image: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elk_nginx.image }}"
+    internal_elk_nginx_server_home_dir: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elk_nginx.home_dir }}"
+    internal_elk_nginx_server_docker_network: "{{ hostvars[groups.elk_rsyslog_server[0]].base.docker.elk_server.elk_nginx.network_name }}"

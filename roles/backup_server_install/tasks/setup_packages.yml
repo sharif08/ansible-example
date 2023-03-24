@@ -1,0 +1,134 @@
+
+- name: Upgrade all apt packages
+  apt:
+    upgrade: dist
+    update_cache: yes
+
+- name: Install Bacula packages
+  apt:
+    name: bacula
+    state: present
+
+- name: Create a [bootstrap, conf.d]  directory for bacula if it does not exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    owner: bacula
+    group: bacula
+    mode: '0775'
+  with_items:
+    - "/etc/bacula/bootstrap"
+    - "/etc/bacula/conf.d"
+  tags:
+  - skip_ansible_lint
+
+- name: find all configuration files
+  find:
+    paths: /etc/bacula/
+    file_type: file
+    patterns: "*.conf"
+  register: filelist
+
+- name: change permissions
+  file:
+    path: "{{ item.path }}"
+    state: file
+    owner: root
+    group: bacula
+    mode: "0666"
+  with_items: "{{ filelist.files }}"
+
+- name: Add an Apt signing key, will not download if present Web UI Installtion
+  apt_key:
+    url: http://bacula.org/downloads/baculum/baculum.pub
+    state: present
+
+- name: Create files Web UI Installtion
+  file:
+    path: "/etc/apt/sources.list.d/baculum.list"
+    state: touch
+    mode: '0666'
+  with_items:
+    - "/etc/apt/sources.list.d/baculum.list"
+    - "/etc/sudoers.d/baculum"
+
+- name: Add repository file for apt Web UI Installtion
+  lineinfile:
+    path: "/etc/apt/sources.list.d/baculum.list"
+    state: present
+    line: '{{ item }}'
+  with_items:
+    - 'deb [ arch=amd64 ] http://bacula.org/downloads/baculum/stable/ubuntu focal main'
+    - 'deb-src http://bacula.org/downloads/baculum/stable/ubuntu focal main'
+#  change_when: false
+
+- name: update apt
+  apt:
+    update_cache: yes
+
+- name: Install baculum API and WEB UI
+  apt:
+    name: [baculum-common,baculum-api,baculum-api-apache2,baculum-web,baculum-web-apache2]
+    state: present
+
+- name:  Enable Apache2 Module Web UI Installtion
+  template:
+    src: apache-modules.j2
+    dest: /tmp/enable-apache-modules.sh
+    backup: yes
+    mode: '0777'
+
+- name: run script enable-apache-modules.sh
+  shell: bash -c "/tmp/enable-apache-modules.sh"
+  register: shell_result
+
+- debug:
+    var: shell_result.stdout_lines
+
+- name: Create a symbolic link 01
+  file:
+    src: /usr/lib/bacula/bdirjson
+    dest: /usr/sbin/bdirjson
+    owner: root
+    group: root
+    state: link
+
+- name: Create a symbolic link 02
+  file:
+    src: /usr/lib/bacula/bsdjson
+    dest: /usr/sbin/bsdjson
+    owner: root
+    group: root
+    state: link
+
+- name: Create a symbolic link 03
+  file:
+    src: /usr/lib/bacula/bfdjson
+    dest: /usr/sbin/bfdjson
+    owner: root
+    group: root
+    state: link
+
+- name: Create a symbolic link 04
+  file:
+    src: /usr/lib/bacula/bbconsjson
+    dest: /usr/sbin/bbconsjson
+    owner: root
+    group: root
+    state: link
+
+- name: Configure sudo right for web server for a list of commands
+  template:
+    src: baculum.j2
+    dest: /etc/sudoers.d/baculum
+    mode: '0644'
+
+- name: Add the user  with a specific uid and a primary group of 'bacula'
+  user:
+    name: "{{ item }}"
+    group: bacula
+    state: present
+  with_items:
+    - www-data
+    - "{{ admin.user }}"

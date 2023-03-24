@@ -1,0 +1,30 @@
+ 
+// Endpoints & Zones
+object Endpoint "{{ inventory_hostname }}" {
+     host="{{ internal_icinga2_client_ip }}"
+     {% if "{{ inventory_hostname }}" == "{{ internal_icinga2_server_host_name }}" %} port="5765" {% else %} port="5665" {% endif %}
+
+}
+
+
+object Zone "{{ inventory_hostname }}" {
+     endpoints = [ "{{ inventory_hostname }}" ]
+     parent = "master"
+}
+
+
+// Host Objects
+object Host "{{ inventory_hostname }}" {
+    check_command = "hostalive"
+    address = "{{ internal_icinga2_client_ip }}"
+    vars.client_endpoint = name
+    vars.os = "{{ internal_icinga2_client_os }}"
+    vars.os_name = "{{ internal_icinga2_client_os_name }}"
+    vars.os_version = "{{ internal_icinga2_client_os_version }}"
+    vars.snmp_type = "{{ internal_icinga2_client_snmp_type }}"
+    vars.ilom_ip = "{{ internal_icinga2_client_ilom_ip }}"
+    vars.ilom_username = "{{ internal_icinga2_client_ilom_username }}"
+    vars.ilom_password = "{{ internal_icinga2_client_ilom_password }}"
+    vars.service_var = "{{ internal_icinga2_client_service_var }}"
+    vars.notify = "true"
+}

@@ -1,0 +1,8 @@
+
+- hosts: elk_rsyslog_server
+  remote_user: "{{ admin.user }}"
+  gather_facts: no
+  become: yes
+
+  roles:
+    - elk_server_install

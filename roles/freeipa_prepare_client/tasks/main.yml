@@ -1,0 +1,8 @@
+---
+
+- name: Collectiong set facts
+  include: initial_setup.yml
+
+- name: LDAP Setup FreeIPA Server
+  include: freeipa_server_setting.yml
+  when: inventory_hostname in groups['ldapserver'][0]

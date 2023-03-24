@@ -1,0 +1,10 @@
+
+
+- name: Initial Setup set facts
+  include: initial_setup.yml
+  when: inventory_hostname in groups['deployment_server'][1]
+
+
+- name: Rancher Installatio
+  include: rancher_setup.yml
+  when: inventory_hostname in groups['deployment_server'][1]
